@@ -30,7 +30,7 @@ class NewfileHandler(RegexMatchingEventHandler):
             file_list=sorted(Path(folderPath).iterdir())
 
 observer = Observer()
-event_handler = NewfileHandler(ignore_regexes=['.*_TEMP*']) # create event handler
+event_handler = NewfileHandler(ignore_regexes=['.*_TEMP*'],ignore_directories=True) # create event handler
 # set observer to use created handler in directory
 observer.schedule(event_handler, path=folderPath)
 observer.start()
