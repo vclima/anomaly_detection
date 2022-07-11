@@ -19,7 +19,7 @@ class NewfileHandler(FileSystemEventHandler):
             unlink(file_list[0])
             print('Deleted '+str(file_list[0]))
             file_list=sorted(Path(folderPath).iterdir(),key=getctime)
-    
+'''   
     def on_modified(self, event): # when file is created
         # do something, eg. call your function to process the image
         print("Got modified event for file"+str(event.src_path))
@@ -28,6 +28,7 @@ class NewfileHandler(FileSystemEventHandler):
             unlink(file_list[0])
             print('Deleted '+str(file_list[0]))
             file_list=sorted(Path(folderPath).iterdir(),key=getctime)
+'''
 
 observer = Observer()
 event_handler = NewfileHandler(ignore_directories=True) # create event handler
