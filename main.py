@@ -14,20 +14,20 @@ class NewfileHandler(RegexMatchingEventHandler):
     def on_created(self, event): # when file is created
         # do something, eg. call your function to process the image
         print("Got created event for file"+str(event.src_path))
-        file_list=sorted(Path(folderPath).iterdir())
+        file_list=sorted(Path(folderPath).iterdir(),key=getctime)
         while len(file_list)>=30:
             unlink(file_list[0])
             print('Deleted '+str(file_list[0]))
-            file_list=sorted(Path(folderPath).iterdir())
+            file_list=sorted(Path(folderPath).iterdir(),key=getctime)
     
     def on_modified(self, event): # when file is created
         # do something, eg. call your function to process the image
         print("Got modified event for file"+str(event.src_path))
-        file_list=sorted(Path(folderPath).iterdir())
+        file_list=sorted(Path(folderPath).iterdir(),key=getctime)
         while len(file_list)>=30:
             unlink(file_list[0])
             print('Deleted '+str(file_list[0]))
-            file_list=sorted(Path(folderPath).iterdir())
+            file_list=sorted(Path(folderPath).iterdir(),key=getctime)
 
 observer = Observer()
 event_handler = NewfileHandler(ignore_regexes=['.*_TEMP*'],ignore_directories=True) # create event handler
