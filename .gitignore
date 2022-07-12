@@ -1,4 +1,5 @@
-/ftp/*
-/cams0/*
+ftp/*
+cams0/*
+i3t/*
 *.bin
 __pycache__/*

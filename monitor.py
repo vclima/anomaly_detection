@@ -8,7 +8,7 @@ from utils import binOpen
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-camPath='ftp'
+camPath='i3t'
 figshape=[0,0]
 
 
