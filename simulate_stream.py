@@ -4,7 +4,7 @@ import time
 
 temp_string='temp_'
 
-def main(src='cams0/i3t',dest='ftp',delta_t=5):
+def main(src='cams2/i3t',dest='i3t',delta_t=5):
     print('simulating input stream...')
     print('copying files from',src,' to ',dest)
 
@@ -14,7 +14,8 @@ def main(src='cams0/i3t',dest='ftp',delta_t=5):
         
     for k,filename in enumerate(os.listdir(src)):
         # create temp filename
-        temp_filename=temp_string+filename
+        temp_filename=filename.split('.')
+        temp_filename=temp_filename[0]+'.tmp'
         print(temp_filename)
         print(filename)
         

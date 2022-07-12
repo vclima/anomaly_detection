@@ -1,7 +1,43 @@
+from struct import iter_unpack,unpack
 import numpy as np
-import denoiser 
+import cv2
+import denoiser
 
-# simple pcp-rpca implementation
+
+def binOpen(fileName):
+    filePointer=open(fileName,'rb')
+    
+    contentBin=filePointer.read(2)
+    content=unpack('H',contentBin)
+    img_type=content[0]
+    
+    contentBin=filePointer.read(4)
+    content=list(iter_unpack('H',contentBin))
+    fig_shape=(content[1][0],content[0][0])
+
+    if img_type:
+        contentBin=filePointer.read(2*fig_shape[0]*fig_shape[1])
+        content=list(iter_unpack('H',contentBin))
+        image=np.array(content).squeeze()
+        image=np.reshape(image,fig_shape)
+        image=np.uint16(image)
+        image = normalize(image)
+    else: 
+        contentBin=filePointer.read(2*fig_shape[0]*fig_shape[1])
+        content=list(iter_unpack('H',contentBin))
+        image=np.array(content).squeeze()
+        image=np.reshape(image,fig_shape)
+        image=np.uint16(image)
+        image = cv2.cvtColor(image, cv2.COLOR_BayerGR2GRAY)
+        image = normalize(image)
+
+    filePointer.close()
+    return image,fig_shape
+
+def normalize(img):
+    out=cv2.normalize(img,None,1,0,cv2.NORM_MINMAX,cv2.CV_32F)
+    return out
+
 def pcp(M, lam=None, mu=None, factor=1, tol=1e-3,maxit=1000,debug=True):
     # initialization
     m, n = M.shape
@@ -10,7 +46,7 @@ def pcp(M, lam=None, mu=None, factor=1, tol=1e-3,maxit=1000,debug=True):
     S = np.zeros((m,n))
     L = np.zeros((m,n))
     Lambda = np.zeros((m,n)) # the dual variable
- 
+
     # parameter setting
     if mu is None:
         mu = 0.25/np.abs(M).mean()
@@ -54,51 +90,4 @@ def pcp(M, lam=None, mu=None, factor=1, tol=1e-3,maxit=1000,debug=True):
         # debug
         if debug is True:
             print(k,':',RelChg)
-    
     return L, S, k, rank
-
-
-
-# stocRPCA utilities
-def solve_proj(m,U,lambda1,lambda2,mu=None,tol=1e-3):
-    # intialization
-    n, p = U.shape
-    v = np.zeros(p)
-    s = np.zeros(n)
-    I = np.identity(p)
-    converged = False
-    maxIter = 50 #np.inf
-    k = 0
-    # alternatively update
-    UUt = np.linalg.inv(U.transpose().dot(U) + lambda1*I).dot(U.transpose())
-    while not converged:
-        k += 1
-        vtemp = v
-        # v = (U'*U + lambda1*I)\(U'*(m-s)) 
-        v = UUt.dot(m - s) 
-        stemp = s 
-        
-        # originally proxl1 
-        s = denoiser.proxl1(m - U.dot(v), lambda2)
-        
-        #print('iter: ',k)
-        stopc = max(np.linalg.norm(v - vtemp), np.linalg.norm(s - stemp))/n
-        if stopc < tol or k > maxIter:
-            converged = True
-            #print(k)
-            #print('inner ',k,'. stopc=',stopc)
-    
-    
-    return v, s
-
-def update_dicio(U, A, B, lambda1):
-    m, q = U.shape
-    A = A + lambda1*np.identity(q)
-    for k in range(q):
-        bk = B[:,k]
-        uk = U[:,k]
-        ak = A[:,k]
-        temp = (bk - U.dot(ak))/A[k,k] + uk
-        U[:,k] = temp/max(np.linalg.norm(temp), 1)
-   
-    return U
