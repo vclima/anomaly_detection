@@ -25,7 +25,7 @@ class NewfileHandler(FileSystemEventHandler):
         # do something, eg. call your function to process the image
         print("Got created event for file "+str(event.src_path))
         fileName=str(event.src_path).split('.')
-        fileName=fileName+'.bin'
+        fileName=fileName[0]+'.bin'
         try:
             file_list=sorted(Path(camPath).iterdir(),key=getctime)
             while len(file_list)>=30:
