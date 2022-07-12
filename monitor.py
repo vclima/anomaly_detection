@@ -14,11 +14,14 @@ class NewfileHandler(FileSystemEventHandler):
     def on_created(self, event): # when file is created
         # do something, eg. call your function to process the image
         print("Got created event for file"+str(event.src_path))
-        file_list=sorted(Path(folderPath).iterdir(),key=getctime)
-        while len(file_list)>=30:
-            unlink(file_list[0])
-            print('Deleted '+str(file_list[0]))
+        try:
             file_list=sorted(Path(folderPath).iterdir(),key=getctime)
+            while len(file_list)>=30:
+                unlink(file_list[0])
+                print('Deleted '+str(file_list[0]))
+                file_list=sorted(Path(folderPath).iterdir(),key=getctime)
+        except:
+            pass
 '''   
     def on_modified(self, event): # when file is created
         # do something, eg. call your function to process the image
