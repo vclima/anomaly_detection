@@ -1,2 +1,9 @@
-/ftp/*
-/cams0/*
+ftp/*
+cams0/*
+debug/*
+train/*
+dicio/*
+__pycache__/*
+.ipynb_checkpoints/*
+teste_mauro.ipynb
+
