@@ -3,7 +3,7 @@ from time import sleep
 from pathlib import Path
 from os.path import getctime
 from os import unlink
-from utils import binOpen
+from util import binOpen
 #from decompLib import Decomp
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
