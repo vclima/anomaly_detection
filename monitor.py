@@ -37,7 +37,7 @@ class NewfileHandler(FileSystemEventHandler):
             except:
                 pass
         
-        img=binOpen(fileName)
+        img,figshape=binOpen(fileName)
 
 
         try:
