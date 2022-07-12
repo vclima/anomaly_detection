@@ -3,6 +3,7 @@ from time import sleep
 from pathlib import Path
 from os.path import getctime
 from os import unlink
+from utils import binOpen
 #from decompLib import Decomp
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -26,6 +27,19 @@ class NewfileHandler(FileSystemEventHandler):
         fileName=str(event.src_path).split('.')
         fileName=fileName[0]+'.bin'
         print("Got created event for file "+fileName)
+        fileOpen=False
+
+        while not fileOpen:
+            try:
+                f=open(fileName,'rb')
+                fileOpen=True
+                f.close()
+            except:
+                pass
+        
+        img=binOpen(fileName)
+
+
         try:
             file_list=sorted(Path(camPath).iterdir(),key=getctime)
             while len(file_list)>=30:

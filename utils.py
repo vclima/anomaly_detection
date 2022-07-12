@@ -10,10 +10,6 @@ def binOpen(fileName):
 
     contentBin=filePointer.read(2*fig_shape[0]*fig_shape[1])
     content=list(iter_unpack('H',contentBin))
-
     image=np.array(content).squeeze()
-    
     image=np.reshape(image,fig_shape)
-
-    print(image)
     return image
