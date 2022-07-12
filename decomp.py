@@ -2,13 +2,12 @@ import pathlib
 from os.path import getctime,isfile,isdir,join
 from os import listdir
 from datetime import datetime
+from timeit import default_timer as timer
 
 from scipy.sparse.linalg import svds
 import cv2
-from PIL import Image
 import numpy as np
-
-import rpca
+import util
 
 
 class Decomp:
@@ -61,6 +60,7 @@ class Decomp:
         self.r=-1
         
         # fit atts
+        self.fit_timer=-1
         
 	
         if build==True and train_path is None:
@@ -101,7 +101,7 @@ class Decomp:
         Y=np.array(frames).transpose()
         
 	# create dicio
-        B,_,_,rank=rpca.pcp(Y,tol=tol)
+        B,_,_,rank=util.pcp(Y,tol=tol)
         self.r=np.linalg.matrix_rank(B)
         U,sigma,_=svds(B,k=self.r)
         print('Dictionary built with',self.r,'atoms')
@@ -169,6 +169,9 @@ class Decomp:
             return
 
     def fit_proj(self,frame):
+        # start timer
+        start_time=timer()
+    	
         # rescale input
         frame=self.rescale(frame)
         
@@ -187,9 +190,17 @@ class Decomp:
  	# normalize in [0,1]
         #a=util.normalize(a)
         #b=util.normalize(b)
+        
+        # update timer
+        end_time = timer()    
+        self.fit_timer=end_time-start_time
+        
         return b,a
 
-    def fit_pnp(self,frame,den,denpar=None,mu=1,lamb1=None,lamb2=None,tol=1e-7,max_iter=100,debug=False):	
+    def fit_pnp(self,frame,den,denpar=None,mu=1,lamb1=None,lamb2=None,tol=1e-7,max_iter=100,debug=False):
+        # start timer
+        start_time=timer()
+    	
         # rescale input
         frame=self.rescale(frame)
         
@@ -249,7 +260,7 @@ class Decomp:
             # debug
             if debug==True: #and ite%self.iter_print==0:
                 print(' ite=',ite,'. err=',err)
-                
+               
                 
         # background component 
         b=self.dicio.dot(s)
@@ -261,6 +272,11 @@ class Decomp:
 	# normalize in [0,1]
         #a=util.normalize(a)
         #b=util.normalize(b)
+        
+        # update timer
+        end_time = timer()    
+        self.fit_timer=end_time-start_time
+        
         return b,a
 
     
