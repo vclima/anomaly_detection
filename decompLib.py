@@ -1,11 +1,14 @@
 import cv2
 import numpy as np
+from pathlib import Path
+from os.path import getctime,isfile,isdir
 from rpca import pcp,solve_proj
 from scipy.sparse.linalg import svds
+from datetime import datetime
 
 
 
-class background:
+class decomp:
 
     '''Class: Background 
 
@@ -20,8 +23,7 @@ class background:
      Methods:
         BuildDictionary(tol): Create the RPCA-based dictionary with tol tolerance '''
 
-    def __init__(self,dictPath,scalingFactor=1,dictBuild=True):
-        #FAZER DICTPATH CAMINHO PADRÃO
+    def __init__(self,dictPath='dict',scalingFactor=1,dictBuild=False):
 
         self.Width=int(640*scalingFactor)
         self.Length=int(480*scalingFactor)
@@ -36,6 +38,7 @@ class background:
    
 
     def BuildDictionary(self,img_path,tol=1e-3):
+
         L,_,_,r=pcp(self.BG_Images,tol=tol)
         r=np.linalg.matrix_rank(L)
         self.BG_Images=None
@@ -46,21 +49,43 @@ class background:
         self.lambda1 = 1.0/np.sqrt(m)/np.mean(sigma) 
         self.lambda2 = 1.0/np.sqrt(m) # 0.05 
 
-        #MUDAR PARA TIMESTAMP
-        with open('L.npy', 'wb') as f:
+        date = datetime.now().strftime("%Y_%m_%d-%I%M%S_%p")
+        fname='dict/L_'+date+'.npy'
+        with open(fname, 'wb') as f:
             np.save(f, L)
-
-        with open('dic.npy', 'wb') as f:
+        fname='dict/dic_'+date+'.npy'
+        with open(fname, 'wb') as f:
             np.save(f, U)
 
         self.BGDic=U
-        
         return
 
     def LoadDictionary(self,dic):
-        #DEFAULT USAR O MAIS RECENTE NA PASTA
-
-        return
+        if isdir(dic):
+            file_list=sorted(Path(dic).iterdir(),key=getctime)
+            try:
+                U=np.load(file_list[-1])
+                print('Loaded dictionary from '+str(file_list[-1]))
+                self.BGDic=U
+                return
+            except:
+                print('Cannot load dictionary from '+str(file_list[-1]))
+                self.BGDic=None
+                return
+        elif isfile(dic):
+            try:
+                U=np.load(file_list[-1])
+                self.BGDic=U
+                print('Loaded dictionary from '+str(file_list[-1]))
+                return
+            except:
+                print('Cannot load dictionary from '+str(file_list[-1]))
+                self.BGDic=None
+                return
+        else:
+            print('Cannot load dictionary from '+str(dic))
+            self.BGDic=None
+            return
 
     def DecomposeProj(self,Im):
         #L,S -> B,A
