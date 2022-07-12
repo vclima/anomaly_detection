@@ -24,7 +24,7 @@ class NewfileHandler(FileSystemEventHandler):
     def on_created(self, event): # when file is created
         # do something, eg. call your function to process the image
         print("Got created event for file "+str(event.src_path))
-        fileName=event.src_path.split('.')
+        fileName=str(event.src_path).split('.')
         fileName=fileName+'.bin'
         try:
             file_list=sorted(Path(camPath).iterdir(),key=getctime)
