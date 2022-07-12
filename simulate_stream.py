@@ -14,7 +14,8 @@ def main(src='cams1/i3t',dest='i3t',delta_t=5):
         
     for k,filename in enumerate(os.listdir(src)):
         # create temp filename
-        temp_filename=temp_string+filename
+        temp_filename=filename.split('.')
+        temp_filename=temp_filename[0]+'.tmp'
         print(temp_filename)
         print(filename)
         

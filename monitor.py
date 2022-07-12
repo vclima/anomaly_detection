@@ -35,9 +35,11 @@ class NewfileHandler(FileSystemEventHandler):
                 fileOpen=True
                 f.close()
             except:
+                print('Waiting for image '+fileName)
                 pass
         
         img=binOpen(fileName)
+        print('Opened image '+fileName)
 
 
         try:
