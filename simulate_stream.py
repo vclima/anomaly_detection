@@ -4,7 +4,7 @@ import time
 
 temp_string='temp_'
 
-def main(src='cams1/i3t',dest='i3t',delta_t=5):
+def main(src='cams2/i3t',dest='i3t',delta_t=5):
     print('simulating input stream...')
     print('copying files from',src,' to ',dest)
 
