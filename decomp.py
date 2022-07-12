@@ -85,11 +85,12 @@ class Decomp:
         # open training images
         files = [join(self.train_path,f) for f in listdir(self.train_path) if isfile(join(self.train_path, f))]
         frames=[]
-        for filename in files:
+        for k,filename in enumerate(files):
             # open file
-            frame,_=binOpen(filename)
-            frame=cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            frame=np.array(frame)
+            frame,_=util.binOpen(filename)
+            
+            # debug
+            # print('Read image',k,'/',len(files))
 
             # rescale 
             frame=self.rescale(frame)
