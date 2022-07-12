@@ -1,5 +1,10 @@
 ftp/*
 cams0/*
+__pycache__/*
 i3t/*
 *.bin
-__pycache__/*
+debug/*
+train/*
+dicio/*
+.ipynb_checkpoints/*
+teste_mauro.ipynb
