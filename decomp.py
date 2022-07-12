@@ -87,7 +87,7 @@ class Decomp:
         frames=[]
         for filename in files:
             # open file
-            frame=cv2.imread(filename)
+            frame,_=binOpen(filename)
             frame=cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             frame=np.array(frame)
 
