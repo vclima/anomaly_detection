@@ -4,12 +4,12 @@ from pathlib import Path
 from os.path import getctime
 from os import unlink
 from util import binOpen
-#from decompLib import Decomp
+from decomp import Decomp
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 camPath='i3t'
-figshape=[0,0]
+figshape=(640,480)
 
 
 
@@ -37,7 +37,9 @@ class NewfileHandler(FileSystemEventHandler):
             except:
                 pass
         
-        img,figshape=binOpen(fileName)
+        img,_=binOpen(fileName)
+        b_proj,a_proj=process.fit_proj(img)
+        b_pnp,a_pnp=process.fit_proj(img)
 
 
         try:
@@ -66,7 +68,7 @@ observer.schedule(event_handler, path=camPath)
 #instanciar um objeto da classe Decomp
 
 observer.start()
-#process=Decomp(figshape,dicioPath)
+process=Decomp(camPath,figshape)
 # sleep until keyboard interrupt, then stop + rejoin the observer
 try:
     while True:
