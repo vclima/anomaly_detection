@@ -13,12 +13,8 @@ def proxl1(x,lamb):
 def proxl2sq(x,lamb):
     return x/(1+lamb)
     
-    
 # ffdnet single image (x.shape=m1,m2)
-def ffd(x,fpars):
-    sigma,m1,m2=fpars
-    x=x.reshape(m1,m2)
-    
+def ffd(x,sigma):
     # normalize input
     ma=np.max(x)
     mi=np.min(x)
@@ -32,4 +28,4 @@ def ffd(x,fpars):
     # denormalize output
     denoised=denoised*(ma-mi)+mi
     
-    return denoised.reshape(m1*m2).astype(float)
+    return denoised

@@ -1,12 +1,14 @@
-import cv2
-from PIL import Image
-import numpy as np
 import pathlib 
 from os.path import getctime,isfile,isdir,join
 from os import listdir
-import rpca
-from scipy.sparse.linalg import svds
 from datetime import datetime
+
+from scipy.sparse.linalg import svds
+import cv2
+from PIL import Image
+import numpy as np
+
+import rpca
 
 
 class Decomp:
@@ -56,6 +58,7 @@ class Decomp:
         self.dicio=None
         self.dicio_file=dicio_file
         self.train_path=train_path
+        self.r=-1
         
         # fit atts
         
@@ -76,7 +79,7 @@ class Decomp:
     def rescale(self,frame):
         frame = cv2.resize(frame, None, fx=self.scaling_factor, fy=self.scaling_factor, interpolation=cv2.INTER_AREA)
         #frame=cv2.normalize(frame, None, 1.0,0.0, cv2.NORM_MINMAX,cv2.CV_32F)
-        return frame
+        return np.array(frame)
 
     def build_dicio(self,tol=1e-3,debug=False,debug_path='debug'):
         # open training images
@@ -98,57 +101,71 @@ class Decomp:
         Y=np.array(frames).transpose()
         
 	# create dicio
-        B,_,_,r=rpca.pcp(Y,tol=tol)
-        r=np.linalg.matrix_rank(B)
-        U,sigma,_=svds(B,k=r)
-        print(r)
+        B,_,_,rank=rpca.pcp(Y,tol=tol)
+        self.r=np.linalg.matrix_rank(B)
+        U,sigma,_=svds(B,k=self.r)
+        print('Dictionary built with',self.r,'atoms')
 
 	# default pars
-        self.lambda1 = 1.0/np.sqrt(self.sn)/np.mean(sigma) 
-        self.lambda2 = 1.0/np.sqrt(self.sn)  
+        self.lamb1 = 1.0/np.sqrt(self.sn)/np.mean(sigma) 
+        self.lamb2 = 1.0/np.sqrt(self.sn)  
 
 	# current date
         date = datetime.now().strftime("%Y_%m_%d-%I%M%S_%p")
 
 	# save background from training set
         if debug==True:
-            fname=join(debug_path,self.name)+date+'.npy'
+            fname=join(debug_path,self.name)+date+'.npz'
             with open(fname, 'wb') as f:
                 np.save(f, B)
+                print('Saving background images of the training set in',fname)
 
-        # save dicio
+        # check if dicio_name is set. if not, use default name
         if self.dicio_file is None:
-            self.dicio_file=join('dicio',self.name)+date+'.npy'
+            self.dicio_file=join('dicio',self.name)+date+'.npz'
 
+        # save dicio file with pars
         with open(self.dicio_file, 'wb') as f:
-            np.save(f, U)
+            np.savez(f,dicio=U,lamb1=self.lamb1,lamb2=self.lamb2)
+            print('Saving dictionary and default parameters in',self.dicio_file)
 
         self.dicio=U
-        return
 
     def load_dicio(self):
         if isdir(self.dicio_file):
             file_list=sorted(pathlib.Path(self.dicio_file).iterdir(),key=getctime)
             try:
-                self.dicio=np.load(file_list[-1])
+                var=np.load(file_list[-1])
+                self.dicio=var['dicio']
+                self.lamb1=var['lamb1']
+                self.lamb2=var['lamb2']
+                self.r=self.dicio.shape[1]
                 print('Loaded dictionary from '+str(file_list[-1]))
                 return
             except:
-                print('Cannot load dictionary from '+str(file_list[-1]))
+                print('Cannot load dictionary from'+str(file_list[-1]))
                 self.dicio=None
                 return
         elif isfile(self.dicio_file):
             try:
-                self.dicio=np.load(self.dicio_file)
+                var=np.load(self.dicio_file)
+                self.dicio=var['dicio']
+                self.lamb1=var['lamb1']
+                self.lamb2=var['lamb2']
+                self.r=self.dicio.shape[1]
                 print('Loaded dictionary from '+str(self.dicio_file))
                 return
             except:
-                print('Cannot load dictionary from '+str(file_list[-1]))
+                print('Cannot load dictionary from'+str(file_list[-1]))
                 self.dicio=None
+                self.lamb1=-1
+                self.lamb2=-1
                 return
         else:
             print('Cannot load dictionary from '+str(self.dicio_file))
             self.dicio=None	
+            self.lamb1=-1
+            self.lamb2=-1
             return
 
     def fit_proj(self,frame):
@@ -156,12 +173,9 @@ class Decomp:
         frame=self.rescale(frame)
         
         # vectorize input 
-        frame_vec=np.array(frame).reshape((self.sn,1))
-        print(frame.shape)
-        print(self.dicio.shape)
-        print(frame_vec.shape)
+        frame_vec=frame.reshape((self.sn,1))
         
-        # proj
+        # decompose
         alpha=np.matmul(self.dicio.T,frame_vec)
         b=np.matmul(self.dicio,alpha)
         a=frame_vec-b
@@ -169,32 +183,84 @@ class Decomp:
         # reshape back
         b=b.reshape((self.sn1,self.sn2))
         a=a.reshape((self.sn1,self.sn2))
-        #B=cv2.normalize(B, None, 1,0, cv2.NORM_MINMAX, cv2.CV_32F)
-        #A=cv2.normalize(A, None, 1,0, cv2.NORM_MINMAX, cv2.CV_32F)
-        
-        # 
-        #A=util.normalize(A)
-        #B=util.normalize(B)
+ 
+ 	# normalize in [0,1]
+        #a=util.normalize(a)
+        #b=util.normalize(b)
         return b,a
 
-    def fit_pnp(self,Im,tol=1e-7):
-        #L,S -> B,A (ATENÇÃO PARA B,A JÁ EXISTENTES)	
-        m,r=self.BGDic.shape
-        #A = np.zeros((r, r))
-        #B = np.zeros((m, r))
-
+    def fit_pnp(self,frame,den,denpar=None,mu=1,lamb1=None,lamb2=None,tol=1e-7,max_iter=100,debug=False):	
+        # rescale input
+        frame=self.rescale(frame)
         
-        ImArray=np.array(Im).reshape((self.Width*self.Length,1))
-        si,ai=solve_proj(ImArray[:,0],self.BGDic,self.lambda1,self.lambda2,tol=tol)
-
-	#A = A + np.outer(si, si)
-	#B = B + np.outer(ImArray[:,0] - ai, si)
+        # vectorize input 
+        frame_vec=frame.reshape((self.sn,1))    
         
-        b_frame=np.array(self.BGDic.dot(si).reshape(self.Length,self.Width))
-        a_frame=np.array(ai.reshape(self.Length,self.Width))
+        # default regularization parameters
+        if lamb1 is None:
+            lamb1=self.lamb1
+        if lamb2 is None:
+            lamb2=self.lamb2
+ 
+        # default denoiser parameter
+        if denpar is None:
+            denpar=lamb2/mu    
+              
+        # ADMM solver for PnP decomposition 
+        s=np.zeros((self.r,1))   # bg representation
+        a=np.zeros((self.sn,1))  # anomaly component
+        e=np.zeros((self.sn,1))  # dummy of the anomaly component
+        m=np.zeros((self.sn,1))  # dual variable 
+        
+        # constant
+        I=np.eye(self.r)
+        cte=np.linalg.inv(self.dicio.transpose().dot(self.dicio)+lamb1*I).dot(self.dicio.transpose()) 
+        
+        # begin loop
+        err=tol+1
+        ite=0
+        while (err>tol) and (ite<max_iter):
+            ite=ite+1
+            skm1=s
+            akm1=a
+        
+            # update s
+            s=cte.dot(frame_vec-a)
+ 
+            # update a 
+            Ds=self.dicio.dot(s)
+            #ak=self.f(yk-Dsk,self.fpars) altmin
+            a=(1/(1+mu))*(frame_vec-Ds+mu*e+m)
+          
+            # update dual variable m
+            m=m+mu*(e-a)
+    
+            # PnP update dummy variable e 
+            a_devec=a.reshape((self.sn1,self.sn2))
+            m_devec=m.reshape((self.sn1,self.sn2))
+            e_devec=den(a_devec - m_devec/mu, denpar)
+            e=e_devec.reshape((self.sn,1))
+            
+            
+            ## calculate reports
+            # err
+            err=np.linalg.norm(frame_vec-Ds-a,ord=2)
+            
+            # debug
+            if debug==True: #and ite%self.iter_print==0:
+                print(' ite=',ite,'. err=',err)
+                
+                
+        # background component 
+        b=self.dicio.dot(s)
 
-        S=cv2.normalize(a_frame, None, 1,0, cv2.NORM_MINMAX, cv2.CV_32F)
-        L=cv2.normalize(b_frame, None, 1,0, cv2.NORM_MINMAX, cv2.CV_32F)
-        return L,S
+        # reshape back
+        b=b.reshape((self.sn1,self.sn2))
+        a=a.reshape((self.sn1,self.sn2))
+       
+	# normalize in [0,1]
+        #a=util.normalize(a)
+        #b=util.normalize(b)
+        return b,a
 
     
