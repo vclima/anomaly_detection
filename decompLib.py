@@ -37,7 +37,7 @@ class decomp:
 
    
 
-    def BuildDictionary(self,img_path,tol=1e-3):
+    def BuildDictionary(self,img_path,tol=1e-3,Ldebug=False):
 
         L,_,_,r=pcp(self.BG_Images,tol=tol)
         r=np.linalg.matrix_rank(L)
@@ -50,9 +50,12 @@ class decomp:
         self.lambda2 = 1.0/np.sqrt(m) # 0.05 
 
         date = datetime.now().strftime("%Y_%m_%d-%I%M%S_%p")
-        fname='dict/L_'+date+'.npy'
-        with open(fname, 'wb') as f:
-            np.save(f, L)
+
+        if Ldebug:
+            fname='debug/L_'+date+'.npy'
+            with open(fname, 'wb') as f:
+                np.save(f, L)
+
         fname='dict/dic_'+date+'.npy'
         with open(fname, 'wb') as f:
             np.save(f, U)
@@ -64,9 +67,8 @@ class decomp:
         if isdir(dic):
             file_list=sorted(Path(dic).iterdir(),key=getctime)
             try:
-                U=np.load(file_list[-1])
+                self.BGDic=np.load(file_list[-1])
                 print('Loaded dictionary from '+str(file_list[-1]))
-                self.BGDic=U
                 return
             except:
                 print('Cannot load dictionary from '+str(file_list[-1]))
@@ -74,9 +76,8 @@ class decomp:
                 return
         elif isfile(dic):
             try:
-                U=np.load(file_list[-1])
-                self.BGDic=U
-                print('Loaded dictionary from '+str(file_list[-1]))
+                self.BGDic=np.load(dic)
+                print('Loaded dictionary from '+str(dic))
                 return
             except:
                 print('Cannot load dictionary from '+str(file_list[-1]))
