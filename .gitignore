@@ -1,2 +1,4 @@
 /ftp/*
 /cams0/*
+*.bin
+__pycache__/*
