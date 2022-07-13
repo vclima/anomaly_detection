@@ -140,10 +140,6 @@ class Decomp:
         # check if dicio_name is set. if not, use default name
         if self.dicio_file is None:
             self.dicio_file=join('dicio',self.name)+'/'+date+'.npz'
-    
-        print(date)
-        print(self.name)
-        print(self.dicio_file)
 
         # save dicio file with pars
         with open(self.dicio_file, 'wb') as f:
