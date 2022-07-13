@@ -29,7 +29,8 @@ def keyWatchdog():
             key=input()
             print('Read '+key)
         else:
-            _=input()
+            key=input()
+            key=None
 
 
 class NewfileHandler(FileSystemEventHandler):
