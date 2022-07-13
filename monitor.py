@@ -24,11 +24,12 @@ def keyWatchdog():
     global key
     global threadPause
     print('keyboard thread online')
-    if not threadPause:
-        key=input()
-        print('Read '+key)
-    else:
-        _=input()
+    while True:
+        if not threadPause:
+            key=input()
+            print('Read '+key)
+        else:
+            _=input()
 
 
 class NewfileHandler(FileSystemEventHandler):
@@ -66,7 +67,7 @@ class NewfileHandler(FileSystemEventHandler):
             train_copied=train_copied+1
             print('Train images: ',train_copied)
             if train_copied>=train_limit:
-                print ('Finished train aquisition')
+                print ('Finished train acquisition')
                 threadPause=False
                 train=False
 
