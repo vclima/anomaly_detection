@@ -40,7 +40,7 @@ class Decomp:
         fit_pnp()
 '''
 
-    def __init__(self,name,fig_shape,scaling_factor=1,build=True,dicio_file='dicio',train_path=None,debug_dicio=False):
+    def __init__(self,name,fig_shape,scaling_factor=1,build=True,dicio_file=None,train_path=None,debug_dicio=False):
         # camera name 
         self.name=name
     
@@ -84,7 +84,7 @@ class Decomp:
         #frame=cv2.normalize(frame, None, 1.0,0.0, cv2.NORM_MINMAX,cv2.CV_32F)
         return np.array(frame)
 
-    def build_dicio(self,tol=1e-3,debug=False,debug_path='debug'):
+    def build_dicio(self,tol=1e-1,debug=False,debug_path='debug'):
         # open training images
         files = [join(self.train_path,f) for f in listdir(self.train_path) if isfile(join(self.train_path, f))]
         frames=[]
@@ -106,10 +106,18 @@ class Decomp:
         
 	# create dicio
         B,_,_,rank=util.pcp(Y,tol=tol)
-        self.r=np.linalg.matrix_rank(B)
-        print(self.r)
-        print(B.shape)
+        #self.r=np.linalg.matrix_rank(B)
+        self.r=rank
+        
+        # prevent svds from crashing
+        if self.r<=0:
+            self.r=1
+        elif self.r>=min(B.shape):
+            self.r=min(B.shape)-1
+        
+        # run svds
         U,sigma,_=svds(B,k=self.r)
+        
         self.dicio=U
         print('Dictionary built with',self.r,'atoms')
 
@@ -131,7 +139,11 @@ class Decomp:
 
         # check if dicio_name is set. if not, use default name
         if self.dicio_file is None:
-            self.dicio_file=join('dicio',self.name)+date+'.npz'
+            self.dicio_file=join('dicio',self.name)+'/'+date+'.npz'
+    
+        print(date)
+        print(self.name)
+        print(self.dicio_file)
 
         # save dicio file with pars
         with open(self.dicio_file, 'wb') as f:
