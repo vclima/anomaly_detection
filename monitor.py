@@ -25,12 +25,8 @@ def keyWatchdog():
     global threadPause
     print('keyboard thread online')
     while True:
-        if threadPause:
-            key=None
-            print('Keyboard paused')
-        else:
-            key=input()
-            print('Read '+key)
+        key=input()
+        print('Read '+key)
 
 
 class NewfileHandler(FileSystemEventHandler):
@@ -39,7 +35,7 @@ class NewfileHandler(FileSystemEventHandler):
         global train
         global run
         global train_copied
-        global threadPause
+        global th
         file_list=[]
 
         # do something, eg. call your function to process the image
@@ -69,7 +65,8 @@ class NewfileHandler(FileSystemEventHandler):
             print('Train images: ',train_copied)
             if train_copied>=train_limit:
                 print ('Finished train acquisition')
-                threadPause=False
+                th = threading.Thread(target=keyWatchdog)
+                th.start()
                 train=False
 
 
@@ -98,7 +95,6 @@ event_handler = NewfileHandler() # create event handler
 observer.schedule(event_handler, path=camPath)
 #instanciar um objeto da classe Decomp
 
-threadPause=False
 th = threading.Thread(target=keyWatchdog)
 th.start()
 
@@ -117,7 +113,7 @@ try:
                 os.remove(os.path.join(trainPath,filename))
             train_copied=0
             train=True
-            threadPause=True
+            th.join()
             key=None
         if key=='B':
             print('Starting process')
