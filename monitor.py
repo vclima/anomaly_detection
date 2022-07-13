@@ -62,6 +62,7 @@ class NewfileHandler(FileSystemEventHandler):
             vis2= np.concatenate((img,b_pnp,a_pnp), axis=1)
             vis = np.concatenate((vis1,vis2), axis=0)
             im = Image.fromarray(vis)
+            im=im.convert("L")
             im.save('out/'+fileName+'.jpeg')
 
 
