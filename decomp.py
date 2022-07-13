@@ -106,10 +106,18 @@ class Decomp:
         
 	# create dicio
         B,_,_,rank=util.pcp(Y,tol=tol)
-        self.r=np.linalg.matrix_rank(B)
-        print(self.r)
-        print(B.shape)
+        #self.r=np.linalg.matrix_rank(B)
+        self.r=rank
+        
+        # prevent svds from crashing
+        if self.r<=0:
+            self.r=1
+        elif self.r>=min(B.shape):
+            self.r=min(B.shape)-1
+        
+        # run svds
         U,sigma,_=svds(B,k=self.r)
+        
         self.dicio=U
         print('Dictionary built with',self.r,'atoms')
 
