@@ -12,7 +12,7 @@ from watchdog.events import FileSystemEventHandler
 import threading,os,shutil
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
+from PIL import Image
 
 camPath='i3t'
 figshape=(480,640)
@@ -58,9 +58,11 @@ class NewfileHandler(FileSystemEventHandler):
             img,_=binOpen(fileName)
             b_proj,a_proj=process.fit_proj(img)
             b_pnp,a_pnp=process.fit_pnp(img,proxl1)
-            plt.imshow(b_proj)
-            plt.show()
-            
+            vis1 = np.concatenate((img,b_proj,a_proj), axis=1)
+            vis2= np.concatenate((img,b_pnp,a_pnp), axis=1)
+            vis = np.concatenate((vis1,vis2), axis=0)
+            im = Image.fromarray(vis)
+            im.save('out/'+fileName+'jpeg')
 
 
         if train:
