@@ -57,12 +57,13 @@ class NewfileHandler(FileSystemEventHandler):
         if run:
             img,_=binOpen(fileName)
             b_proj,a_proj=process.fit_proj(img)
+            print('Projection: '+str(process.fit_timer))
             b_pnp,a_pnp=process.fit_pnp(img,proxl1)
+            print('Stoc: '+str(process.fit_timer))
             vis1 = np.concatenate((process.rescale(img),b_proj,a_proj), axis=1)
             vis2= np.concatenate((process.rescale(img),b_pnp,a_pnp), axis=1)
             vis = np.concatenate((vis1,vis2), axis=0)
             vis= np.around(normalize(vis,0,255))
-            print(np.max(vis))
 
             im = Image.fromarray(vis)
             im=im.convert("L")
@@ -88,7 +89,7 @@ class NewfileHandler(FileSystemEventHandler):
             file_list=sorted(Path(camPath).iterdir(),key=getctime)
             while len(file_list)>=30:
                 unlink(file_list[0])
-                print('Deleted '+str(file_list[0]))
+                #print('Deleted '+str(file_list[0]))
                 file_list=sorted(Path(camPath).iterdir(),key=getctime)
         except:
             pass
@@ -119,7 +120,7 @@ train=False
 train_copied=0
 # sleep until keyboard interrupt, then stop + rejoin the observer
 try:
-    print('T - capture train images; B - begin process; S - stop process')
+    print('T - capture train images; S - Train dictionary and start;L - Load dictionary and start; P - Pause process; R - Resume process;')
     while True:      
         if key=='T':
             print('copying files from',camPath,' to ',trainPath)
@@ -143,7 +144,7 @@ try:
             run=True
             key=None
         elif key=='L':
-            process=Decomp(camPath,figshape,build=False,dicio_file=dicioPath)
+            process=Decomp(camPath,figshape,build=False,dicio_file=dicioPath,scaling_factor=0.5)
             run=False
             key=None
         elif key=='Q':
