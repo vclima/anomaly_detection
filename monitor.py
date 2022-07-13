@@ -12,7 +12,7 @@ import threading,os,shutil
 
 camPath='i3t'
 figshape=(640,480)
-train_limit=5
+train_limit=70
 
 
 
