@@ -12,7 +12,7 @@ import threading,os,shutil
 
 camPath='i3t'
 figshape=(640,480)
-train_limit=70
+train_limit=20
 
 
 
@@ -32,6 +32,7 @@ class NewfileHandler(FileSystemEventHandler):
         global train
         global run
         global train_copied
+        global th
         file_list=[]
 
         # do something, eg. call your function to process the image
