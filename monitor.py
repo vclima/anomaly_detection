@@ -58,8 +58,8 @@ class NewfileHandler(FileSystemEventHandler):
             img,_=binOpen(fileName)
             b_proj,a_proj=process.fit_proj(img)
             b_pnp,a_pnp=process.fit_pnp(img,proxl1)
-            vis1 = np.concatenate((img,b_proj,a_proj), axis=1)
-            vis2= np.concatenate((img,b_pnp,a_pnp), axis=1)
+            vis1 = np.concatenate((process.rescale(img),b_proj,a_proj), axis=1)
+            vis2= np.concatenate((process.rescale(img),b_pnp,a_pnp), axis=1)
             vis = np.concatenate((vis1,vis2), axis=0)
             vis= np.around(normalize(vis,0,255))
             print(np.max(vis))
@@ -129,25 +129,28 @@ try:
             train=True
             th.join()
             key=None
-        if key=='S':
+        elif key=='S':
             print('Starting process')
-            process=Decomp(camPath,figshape,build=True,train_path=trainPath)
+            process=Decomp(camPath,figshape,build=True,train_path=trainPath,scaling_factor=0.5)
             run=True
             key=None
-        if key=='P':
+        elif key=='P':
             print('Pausing process')
             run=False
             key=None
-        if key=='R':
+        elif key=='R':
             print('Resume process')
             run=True
             key=None
-        if key=='L':
+        elif key=='L':
             process=Decomp(camPath,figshape,build=False,dicio_file=dicioPath)
             run=False
             key=None
-        if key=='Q':
-            break
+        elif key=='Q':
+            raise KeyboardInterrupt
+        else:
+            key=None
+        
         sleep(1)
 except KeyboardInterrupt:
     observer.stop()
