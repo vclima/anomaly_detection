@@ -7,16 +7,20 @@ import os
 from PIL import Image
 
 
-def binOpen(fileName):
+def binOpen(fileName,debug=False):
     filePointer=open(fileName,'rb')
     
     contentBin=filePointer.read(2)
     content=unpack('H',contentBin)
     img_type=content[0]
+    if debug:
+        print(img_type)
     
     contentBin=filePointer.read(4)
     content=list(iter_unpack('H',contentBin))
     fig_shape=(content[1][0],content[0][0])
+    if debug:
+        print(fig_shape)
 
     if img_type:
         contentBin=filePointer.read(2*fig_shape[0]*fig_shape[1])

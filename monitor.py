@@ -14,7 +14,7 @@ import cv2
 import numpy as np
 from PIL import Image
 
-camPath='i3t'
+camPath='pan'
 figshape=(480,640)
 train_limit=70
 
