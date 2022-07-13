@@ -26,7 +26,6 @@ dicioPath='dicio/'+camPath
 
 def keyWatchdog():
     global key
-    print('keyboard thread online')
     while key==None:
         key=input()
         print('Read '+key)
@@ -122,7 +121,7 @@ train_copied=0
 try:
     print('T - capture train images; S - Train dictionary and start;L - Load dictionary and start; P - Pause process; R - Resume process;')
     while True:      
-        if key=='T':
+        if key=='T' or key=='t':
             print('copying files from',camPath,' to ',trainPath)
             for filename in os.listdir(trainPath):
                 os.remove(os.path.join(trainPath,filename))
@@ -130,7 +129,7 @@ try:
             train=True
             th.join()
             key=None
-        elif key=='S':
+        elif key=='S' or key=='s':
             th.join()
             print('Starting process')
             process=Decomp(camPath,figshape,build=True,train_path=trainPath,scaling_factor=0.5)
@@ -138,32 +137,35 @@ try:
             key=None
             th = threading.Thread(target=keyWatchdog)
             th.start()
-        elif key=='P':
+        elif key=='P' or key=='p':
             th.join()
             print('Pausing process')
             run=False
             key=None
             th = threading.Thread(target=keyWatchdog)
             th.start()
-        elif key=='R':
+        elif key=='R' or key=='r':
             th.join()
             print('Resume process')
             run=True
             key=None
             th = threading.Thread(target=keyWatchdog)
             th.start()
-        elif key=='L':
+        elif key=='L' or key=='l':
             th.join()
             print('Load dic')
             process=Decomp(camPath,figshape,build=False,dicio_file=dicioPath,scaling_factor=0.5)
-            run=False
+            run=True
             key=None
             th = threading.Thread(target=keyWatchdog)
             th.start()
-        elif key=='Q':
+        elif key=='Q' or key=='q':
             raise KeyboardInterrupt
         else:
+            th.join()
             key=None
+            th = threading.Thread(target=keyWatchdog)
+            th.start()
         
         sleep(1)
 except KeyboardInterrupt:
