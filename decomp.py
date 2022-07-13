@@ -84,7 +84,7 @@ class Decomp:
         #frame=cv2.normalize(frame, None, 1.0,0.0, cv2.NORM_MINMAX,cv2.CV_32F)
         return np.array(frame)
 
-    def build_dicio(self,tol=1e-3,debug=False,debug_path='debug'):
+    def build_dicio(self,tol=1e-1,debug=False,debug_path='debug'):
         # open training images
         files = [join(self.train_path,f) for f in listdir(self.train_path) if isfile(join(self.train_path, f))]
         frames=[]
@@ -140,6 +140,9 @@ class Decomp:
         # check if dicio_name is set. if not, use default name
         if self.dicio_file is None:
             self.dicio_file=join('dicio',self.name)+date+'.npz'
+    
+    
+        print(self.dicio_file)
 
         # save dicio file with pars
         with open(self.dicio_file, 'wb') as f:
