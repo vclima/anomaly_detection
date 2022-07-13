@@ -57,7 +57,7 @@ class NewfileHandler(FileSystemEventHandler):
             img,_=binOpen(fileName)
             b_proj,a_proj=process.fit_proj(img)
             b_pnp,a_pnp=process.fit_pnp(img,proxl1)
-            print('BG '+b_proj.shape+' AN '+a_proj.shape)
+            print('BG '+str(b_proj.shape)+' AN '+str(a_proj.shape))
 
 
         if train:
