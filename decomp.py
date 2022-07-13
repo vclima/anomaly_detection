@@ -2,13 +2,11 @@ import pathlib
 from os.path import getctime,isfile,isdir,join
 from os import listdir
 from datetime import datetime
-
+import util
 from scipy.sparse.linalg import svds
 import cv2
-from PIL import Image
 import numpy as np
 
-import rpca
 
 
 class Decomp:
@@ -101,7 +99,7 @@ class Decomp:
         Y=np.array(frames).transpose()
         
 	# create dicio
-        B,_,_,rank=rpca.pcp(Y,tol=tol)
+        B,_,_,rank=util.pcp(Y,tol=tol)
         self.r=np.linalg.matrix_rank(B)
         U,sigma,_=svds(B,k=self.r)
         print('Dictionary built with',self.r,'atoms')

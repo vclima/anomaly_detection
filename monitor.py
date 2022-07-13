@@ -39,7 +39,7 @@ class NewfileHandler(FileSystemEventHandler):
         
         img,_=binOpen(fileName)
         b_proj,a_proj=process.fit_proj(img)
-        b_pnp,a_pnp=process.fit_proj(img)
+        b_pnp,a_pnp=process.fit_pnp(img)
 
 
         try:
@@ -72,6 +72,7 @@ process=Decomp(camPath,figshape)
 # sleep until keyboard interrupt, then stop + rejoin the observer
 try:
     while True:
+        a=input('Press T to capture train images')
         sleep(1)
 except KeyboardInterrupt:
     observer.stop()
