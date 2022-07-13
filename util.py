@@ -34,8 +34,8 @@ def binOpen(fileName):
     filePointer.close()
     return image,fig_shape
 
-def normalize(img):
-    out=cv2.normalize(img,None,1,0,cv2.NORM_MINMAX,cv2.CV_32F)
+def normalize(img,mi=0,ma=1):
+    out=cv2.normalize(img,None,ma,mi,cv2.NORM_MINMAX,cv2.CV_32F)
     return out
 
 def pcp(M, lam=None, mu=None, factor=1, tol=1e-3,maxit=1000,debug=True):
