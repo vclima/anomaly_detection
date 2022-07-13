@@ -21,6 +21,7 @@ debugPath='debug/'+camPath
 dicioPath='dicio/'+camPath
 
 def keyWatchdog():
+    print('keyboard thread online')
     global key
     key=input()
 
@@ -89,22 +90,26 @@ observer.start()
 run=False
 train=False
 train_copied=0
+key=None
 # sleep until keyboard interrupt, then stop + rejoin the observer
 try:
     print('T - capture train images; B - begin process; S - stop process')
     while True:      
         if key=='T':
+            key=None
             for filename in os.listdir(trainPath):
                 os.remove(os.path.join(trainPath,filename))
             train_copied=0
             train=True
             th.join()
         if key=='B':
+            key=None
             print('Starting process')
             process=Decomp(camPath,figshape)
             process.build_dicio()
             run=True
         if key=='S':
+            key=None
             print('Stopping process')
             run=False
         sleep(1)
