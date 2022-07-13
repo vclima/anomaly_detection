@@ -4,15 +4,18 @@ from pathlib import Path
 from os.path import getctime
 from os import unlink
 from util import binOpen
+from denoiser import proxl1,ffd
 from decomp import Decomp
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 import threading,os,shutil
+import cv2
+import numpy as np
 
 camPath='i3t'
 figshape=(640,480)
-train_limit=5
+train_limit=70
 
 
 
@@ -53,7 +56,13 @@ class NewfileHandler(FileSystemEventHandler):
         if run:
             img,_=binOpen(fileName)
             b_proj,a_proj=process.fit_proj(img)
-            b_pnp,a_pnp=process.fit_pnp(img)
+            b_pnp,a_pnp=process.fit_pnp(img,proxl1)
+            vis1 = np.concatenate((img,b_proj,a_proj), axis=1)
+            vis2= np.concatenate((img,b_pnp,a_pnp), axis=1)
+            vis = np.concatenate((vis1,vis2), axis=0)
+            cv2.imshow('frames', vis)
+
+
         if train:
             destFile=fileName.replace('\\','/')
             destFile=destFile.split('/')
@@ -114,18 +123,25 @@ try:
             train=True
             th.join()
             key=None
-        if key=='B':
+        if key=='S':
             print('Starting process')
-            process=Decomp(camPath,figshape)
-            process.build_dicio()
+            process=Decomp(camPath,figshape,build=True,train_path=trainPath)
             run=True
             key=None
-        if key=='S':
-            print('Stopping process')
+        if key=='P':
+            print('Pausing process')
             run=False
             key=None
+        if key=='R':
+            print('Resume process')
+            run=True
+            key=None
+        if key=='Q':
+            break
         sleep(1)
 except KeyboardInterrupt:
     observer.stop()
 
 observer.join()
+cv2.destroyAllWindows() 
+cv2.VideoCapture(0).release()
