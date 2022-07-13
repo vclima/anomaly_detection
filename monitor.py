@@ -22,8 +22,10 @@ dicioPath='dicio/'+camPath
 
 def keyWatchdog():
     global key
+    global threadPause
     print('keyboard thread online')
-    key=input()
+    if not threadPause:
+        key=input()
 
 
 class NewfileHandler(FileSystemEventHandler):
@@ -32,7 +34,7 @@ class NewfileHandler(FileSystemEventHandler):
         global train
         global run
         global train_copied
-        global th
+        global threadPause
         file_list=[]
 
         # do something, eg. call your function to process the image
@@ -62,7 +64,7 @@ class NewfileHandler(FileSystemEventHandler):
             print('Train images: ',train_copied)
             if train_copied>=train_limit:
                 print ('Finished train aquisition')
-                th.start()
+                threadPause=False
                 train=False
 
 
@@ -97,6 +99,7 @@ th.start()
 observer.start()
 run=False
 train=False
+threadPause=False
 train_copied=0
 key=None
 # sleep until keyboard interrupt, then stop + rejoin the observer
@@ -110,7 +113,7 @@ try:
                 os.remove(os.path.join(trainPath,filename))
             train_copied=0
             train=True
-            th.join()
+            threadPause=True
         if key=='B':
             key=None
             print('Starting process')
