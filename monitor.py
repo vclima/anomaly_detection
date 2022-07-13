@@ -51,10 +51,10 @@ class NewfileHandler(FileSystemEventHandler):
             b_proj,a_proj=process.fit_proj(img)
             b_pnp,a_pnp=process.fit_pnp(img)
         if train:
-            print('copying files from',camPath,' to ',trainPath)
-            fileName.replace('\\','/')
-            fileName.split('/')
-            shutil.copy(os.path.join(camPath,fileName),fileName[1])
+            destFile=fileName.replace('\\','/')
+            destFile=destFile.split('/')
+            print('copying file',fileName,' to ',camPath+fileName[1])
+            shutil.copy(fileName,camPath+fileName[1])
             train_copied=train_copied+1
             print('copied file number ',train_copied)
             if train_copied>=train_limit:
@@ -101,6 +101,7 @@ try:
     print('T - capture train images; B - begin process; S - stop process')
     while True:      
         if key=='T':
+            print('copying files from',camPath,' to ',trainPath)
             key=None
             for filename in os.listdir(trainPath):
                 os.remove(os.path.join(trainPath,filename))
