@@ -61,7 +61,7 @@ class NewfileHandler(FileSystemEventHandler):
             vis1 = np.concatenate((img,b_proj,a_proj), axis=1)
             vis2= np.concatenate((img,b_pnp,a_pnp), axis=1)
             vis = np.concatenate((vis1,vis2), axis=0)
-            vis= int(normalize(vis,0,255))
+            vis= np.around(normalize(vis,0,255))
             print(np.max(vis))
 
             im = Image.fromarray(vis)
