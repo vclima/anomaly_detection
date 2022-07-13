@@ -12,6 +12,7 @@ from watchdog.events import FileSystemEventHandler
 import threading,os,shutil
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 camPath='i3t'
 figshape=(480,640)
@@ -57,7 +58,9 @@ class NewfileHandler(FileSystemEventHandler):
             img,_=binOpen(fileName)
             b_proj,a_proj=process.fit_proj(img)
             b_pnp,a_pnp=process.fit_pnp(img,proxl1)
-            print('BG '+str(b_proj.shape)+' AN '+str(a_proj.shape))
+            plt.imshow(b_proj)
+            plt.show()
+            
 
 
         if train:
