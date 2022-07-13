@@ -139,7 +139,7 @@ class Decomp:
 
         # check if dicio_name is set. if not, use default name
         if self.dicio_file is None:
-            self.dicio_file=join('dicio',self.name)+date+'.npz'
+            self.dicio_file=join('dicio',self.name)+'/'+date+'.npz'
     
         print(date)
         print(self.name)
