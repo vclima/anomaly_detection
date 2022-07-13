@@ -2,13 +2,12 @@ import pathlib
 from os.path import getctime,isfile,isdir,join
 from os import listdir
 from datetime import datetime
+from timeit import default_timer as timer
 
 from scipy.sparse.linalg import svds
 import cv2
-from PIL import Image
 import numpy as np
-
-import rpca
+import util
 
 
 class Decomp:
@@ -61,6 +60,10 @@ class Decomp:
         self.r=-1
         
         # fit atts
+        self.fit_timer=-1
+        self.lamb1=-1
+        self.lamb2=-1
+        self.pnp_admm_cte=-1
         
 	
         if build==True and train_path is None:
@@ -85,11 +88,12 @@ class Decomp:
         # open training images
         files = [join(self.train_path,f) for f in listdir(self.train_path) if isfile(join(self.train_path, f))]
         frames=[]
-        for filename in files:
+        for k,filename in enumerate(files):
             # open file
-            frame=cv2.imread(filename)
-            frame=cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            frame=np.array(frame)
+            frame,_=util.binOpen(filename)
+            
+            # debug
+            # print('Read image',k,'/',len(files))
 
             # rescale 
             frame=self.rescale(frame)
@@ -101,14 +105,17 @@ class Decomp:
         Y=np.array(frames).transpose()
         
 	# create dicio
-        B,_,_,rank=rpca.pcp(Y,tol=tol)
+        B,_,_,rank=util.pcp(Y,tol=tol)
         self.r=np.linalg.matrix_rank(B)
         U,sigma,_=svds(B,k=self.r)
+        self.dicio=U
         print('Dictionary built with',self.r,'atoms')
 
-	# default pars
+	# default pars and default pnp_admm_cte
         self.lamb1 = 1.0/np.sqrt(self.sn)/np.mean(sigma) 
         self.lamb2 = 1.0/np.sqrt(self.sn)  
+        I=np.eye(self.r)
+        self.pnp_admm_cte=np.linalg.inv(self.dicio.transpose().dot(self.dicio)+self.lamb1*I).dot(self.dicio.transpose()) 
 
 	# current date
         date = datetime.now().strftime("%Y_%m_%d-%I%M%S_%p")
@@ -126,10 +133,9 @@ class Decomp:
 
         # save dicio file with pars
         with open(self.dicio_file, 'wb') as f:
-            np.savez(f,dicio=U,lamb1=self.lamb1,lamb2=self.lamb2)
+            np.savez(f,dicio=self.dicio,lamb1=self.lamb1,lamb2=self.lamb2,pnp_admm_cte=self.pnp_admm_cte)
             print('Saving dictionary and default parameters in',self.dicio_file)
 
-        self.dicio=U
 
     def load_dicio(self):
         if isdir(self.dicio_file):
@@ -140,6 +146,7 @@ class Decomp:
                 self.lamb1=var['lamb1']
                 self.lamb2=var['lamb2']
                 self.r=self.dicio.shape[1]
+                self.pnp_admm_cte=var['pnp_admm_cte']
                 print('Loaded dictionary from '+str(file_list[-1]))
                 return
             except:
@@ -153,6 +160,7 @@ class Decomp:
                 self.lamb1=var['lamb1']
                 self.lamb2=var['lamb2']
                 self.r=self.dicio.shape[1]
+                self.pnp_admm_cte=var['pnp_admm_cte']
                 print('Loaded dictionary from '+str(self.dicio_file))
                 return
             except:
@@ -160,15 +168,20 @@ class Decomp:
                 self.dicio=None
                 self.lamb1=-1
                 self.lamb2=-1
+                self.pnp_admm_cte=-1
                 return
         else:
             print('Cannot load dictionary from '+str(self.dicio_file))
             self.dicio=None	
             self.lamb1=-1
             self.lamb2=-1
+            self.pnp_admm_cte=-1
             return
 
     def fit_proj(self,frame):
+        # start timer
+        start_time=timer()
+    	
         # rescale input
         frame=self.rescale(frame)
         
@@ -187,18 +200,35 @@ class Decomp:
  	# normalize in [0,1]
         #a=util.normalize(a)
         #b=util.normalize(b)
+        
+        # update timer
+        end_time = timer()    
+        self.fit_timer=end_time-start_time
+        
         return b,a
 
-    def fit_pnp(self,frame,den,denpar=None,mu=1,lamb1=None,lamb2=None,tol=1e-7,max_iter=100,debug=False):	
+    def fit_pnp(self,frame,den,denpar=None,mu=1,lamb1=None,lamb2=None,tol=1e-7,max_iter=100,debug=False):
+        # start timer
+        start_time=timer()
+    	
         # rescale input
         frame=self.rescale(frame)
         
         # vectorize input 
         frame_vec=frame.reshape((self.sn,1))    
         
-        # default regularization parameters
+        # default regularization parameter 1 
+        # lamb1 is also used in the computation of pnp_admm_cte. if the default lamb1 value is used, then cte is pre-computed 
+        # in the dictionary building step, and it is stored with the other dictionary parameters. otherwise, we compute 
+        # it again.  
         if lamb1 is None:
             lamb1=self.lamb1
+            cte=self.pnp_admm_cte
+        else:
+            I=np.eye(self.r)
+            cte=np.linalg.inv(self.dicio.transpose().dot(self.dicio)+lamb1*I).dot(self.dicio.transpose()) 
+        
+        # default regularization parameter 2 
         if lamb2 is None:
             lamb2=self.lamb2
  
@@ -211,10 +241,6 @@ class Decomp:
         a=np.zeros((self.sn,1))  # anomaly component
         e=np.zeros((self.sn,1))  # dummy of the anomaly component
         m=np.zeros((self.sn,1))  # dual variable 
-        
-        # constant
-        I=np.eye(self.r)
-        cte=np.linalg.inv(self.dicio.transpose().dot(self.dicio)+lamb1*I).dot(self.dicio.transpose()) 
         
         # begin loop
         err=tol+1
@@ -249,7 +275,7 @@ class Decomp:
             # debug
             if debug==True: #and ite%self.iter_print==0:
                 print(' ite=',ite,'. err=',err)
-                
+               
                 
         # background component 
         b=self.dicio.dot(s)
@@ -261,6 +287,11 @@ class Decomp:
 	# normalize in [0,1]
         #a=util.normalize(a)
         #b=util.normalize(b)
+        
+        # update timer
+        end_time = timer()    
+        self.fit_timer=end_time-start_time
+        
         return b,a
 
     
