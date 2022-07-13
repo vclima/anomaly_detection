@@ -27,11 +27,12 @@ def keyWatchdog():
 
 
 class NewfileHandler(FileSystemEventHandler):
-    global train
-    global run
-    file_list=[]
-
+    
     def on_created(self, event): # when file is created
+        global train
+        global run
+        file_list=[]
+
         # do something, eg. call your function to process the image
         fileName=str(event.src_path).split('.')
         fileName=fileName[0]+'.bin'
