@@ -21,12 +21,14 @@ debugPath='debug/'+camPath
 dicioPath='dicio/'+camPath
 
 def keyWatchdog():
-    print('keyboard thread online')
     global key
+    print('keyboard thread online')
     key=input()
 
 
 class NewfileHandler(FileSystemEventHandler):
+    global train
+    global run
     file_list=[]
 
     def on_created(self, event): # when file is created
