@@ -57,10 +57,7 @@ class NewfileHandler(FileSystemEventHandler):
             img,_=binOpen(fileName)
             b_proj,a_proj=process.fit_proj(img)
             b_pnp,a_pnp=process.fit_pnp(img,proxl1)
-            vis1 = np.concatenate((img,b_proj,a_proj), axis=1)
-            vis2= np.concatenate((img,b_pnp,a_pnp), axis=1)
-            vis = np.concatenate((vis1,vis2), axis=0)
-            cv2.imshow('frames', vis)
+            print('BG '+b_proj.shape+' AN '+a_proj.shape)
 
 
         if train:
@@ -143,4 +140,3 @@ except KeyboardInterrupt:
     observer.stop()
 
 observer.join()
-cv2.destroyAllWindows() 
