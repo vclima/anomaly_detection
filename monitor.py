@@ -144,4 +144,3 @@ except KeyboardInterrupt:
 
 observer.join()
 cv2.destroyAllWindows() 
-cv2.VideoCapture(0).release()
