@@ -3,7 +3,7 @@ from time import sleep
 from pathlib import Path
 from os.path import getctime
 from os import unlink
-from util import binOpen
+from util import binOpen,normalize
 from denoiser import proxl1,ffd
 from decomp import Decomp
 from watchdog.observers import Observer
@@ -61,6 +61,7 @@ class NewfileHandler(FileSystemEventHandler):
             vis1 = np.concatenate((img,b_proj,a_proj), axis=1)
             vis2= np.concatenate((img,b_pnp,a_pnp), axis=1)
             vis = np.concatenate((vis1,vis2), axis=0)
+            vis= int(normalize(vis,0,255))
             print(np.max(vis))
 
             im = Image.fromarray(vis)
