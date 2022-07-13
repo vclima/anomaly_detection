@@ -26,6 +26,8 @@ def keyWatchdog():
     print('keyboard thread online')
     if not threadPause:
         key=input()
+    else:
+        _=input()
 
 
 class NewfileHandler(FileSystemEventHandler):
