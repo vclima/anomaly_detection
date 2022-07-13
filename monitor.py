@@ -62,7 +62,7 @@ class NewfileHandler(FileSystemEventHandler):
             print('Train images: ',train_copied)
             if train_copied>=train_limit:
                 print ('Finished train aquisition')
-                th = threading.Thread(target=keyWatchdog)
+                th.start()
                 train=False
 
 
