@@ -53,7 +53,7 @@ class NewfileHandler(FileSystemEventHandler):
         if train:
             print('copying files from',camPath,' to ',trainPath)
             fileName.replace('\\','/')
-            filename.split('/')
+            fileName.split('/')
             shutil.copy(os.path.join(camPath,fileName),fileName[1])
             train_copied=train_copied+1
             print('copied file number ',train_copied)
