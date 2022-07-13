@@ -131,22 +131,35 @@ try:
             th.join()
             key=None
         elif key=='S':
+            th.join()
             print('Starting process')
             process=Decomp(camPath,figshape,build=True,train_path=trainPath,scaling_factor=0.5)
             run=True
             key=None
+            th = threading.Thread(target=keyWatchdog)
+            th.start()
         elif key=='P':
+            th.join()
             print('Pausing process')
             run=False
             key=None
+            th = threading.Thread(target=keyWatchdog)
+            th.start()
         elif key=='R':
+            th.join()
             print('Resume process')
             run=True
             key=None
+            th = threading.Thread(target=keyWatchdog)
+            th.start()
         elif key=='L':
+            th.join()
+            print('Load dic')
             process=Decomp(camPath,figshape,build=False,dicio_file=dicioPath,scaling_factor=0.5)
             run=False
             key=None
+            th = threading.Thread(target=keyWatchdog)
+            th.start()
         elif key=='Q':
             raise KeyboardInterrupt
         else:
