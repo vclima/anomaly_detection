@@ -2,6 +2,9 @@ from struct import iter_unpack,unpack
 import numpy as np
 import cv2
 import denoiser
+import os
+
+from PIL import Image
 
 
 def binOpen(fileName):
@@ -91,3 +94,17 @@ def pcp(M, lam=None, mu=None, factor=1, tol=1e-3,maxit=1000,debug=True):
         if debug is True:
             print(k,':',RelChg)
     return L, S, k, rank
+
+
+def convertBin(infolder,outfolder):
+
+    for k,filename in enumerate(os.listdir(infolder)):
+        img=binOpen(filename)
+        
+        vis= np.around(normalize(img,0,255))
+
+        im = Image.fromarray(vis)
+        im=im.convert("L")
+        im.save(outfolder+filename+'.jpeg')
+       
+    return

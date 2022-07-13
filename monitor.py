@@ -142,6 +142,10 @@ try:
             print('Resume process')
             run=True
             key=None
+        if key=='L':
+            process=Decomp(camPath,figshape,build=False,dicio_file=dicioPath)
+            run=False
+            key=None
         if key=='Q':
             break
         sleep(1)
