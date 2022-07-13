@@ -4,12 +4,15 @@ from pathlib import Path
 from os.path import getctime
 from os import unlink
 from util import binOpen
-#from decompLib import Decomp
+from decomp import Decomp
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+import threading,os,shutil
+
 camPath='i3t'
-figshape=[0,0]
+figshape=(640,480)
+train_limit=5
 
 
 
@@ -17,12 +20,23 @@ trainPath='train/'+camPath
 debugPath='debug/'+camPath
 dicioPath='dicio/'+camPath
 
+def keyWatchdog():
+    global key
+    print('keyboard thread online')
+    while key==None:
+        key=input()
+        print('Read '+key)
 
 
 class NewfileHandler(FileSystemEventHandler):
-    file_list=[]
-
+    
     def on_created(self, event): # when file is created
+        global train
+        global run
+        global train_copied
+        global th
+        file_list=[]
+
         # do something, eg. call your function to process the image
         fileName=str(event.src_path).split('.')
         fileName=fileName[0]+'.bin'
@@ -36,8 +50,23 @@ class NewfileHandler(FileSystemEventHandler):
                 f.close()
             except:
                 pass
-        
-        img,figshape=binOpen(fileName)
+        if run:
+            img,_=binOpen(fileName)
+            b_proj,a_proj=process.fit_proj(img)
+            b_pnp,a_pnp=process.fit_pnp(img)
+        if train:
+            destFile=fileName.replace('\\','/')
+            destFile=destFile.split('/')
+            destFile=trainPath+'/'+destFile[1]
+            print('copying file',fileName,' to ',destFile)
+            shutil.copy(fileName,destFile)
+            train_copied=train_copied+1
+            print('Train images: ',train_copied)
+            if train_copied>=train_limit:
+                print ('Finished train acquisition')
+                th = threading.Thread(target=keyWatchdog)
+                th.start()
+                train=False
 
 
         try:
@@ -65,11 +94,36 @@ event_handler = NewfileHandler() # create event handler
 observer.schedule(event_handler, path=camPath)
 #instanciar um objeto da classe Decomp
 
+key=None
+th = threading.Thread(target=keyWatchdog)
+th.start()
+
 observer.start()
-#process=Decomp(figshape,dicioPath)
+run=False
+train=False
+train_copied=0
 # sleep until keyboard interrupt, then stop + rejoin the observer
 try:
-    while True:
+    print('T - capture train images; B - begin process; S - stop process')
+    while True:      
+        if key=='T':
+            print('copying files from',camPath,' to ',trainPath)
+            for filename in os.listdir(trainPath):
+                os.remove(os.path.join(trainPath,filename))
+            train_copied=0
+            train=True
+            th.join()
+            key=None
+        if key=='B':
+            print('Starting process')
+            process=Decomp(camPath,figshape)
+            process.build_dicio()
+            run=True
+            key=None
+        if key=='S':
+            print('Stopping process')
+            run=False
+            key=None
         sleep(1)
 except KeyboardInterrupt:
     observer.stop()
