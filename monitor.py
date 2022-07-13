@@ -15,7 +15,7 @@ import numpy as np
 from PIL import Image
 
 camPath='pan'
-figshape=(480,640)
+figshape=(1536,2048)
 train_limit=70
 
 
