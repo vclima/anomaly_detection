@@ -54,11 +54,11 @@ class NewfileHandler(FileSystemEventHandler):
         if train:
             destFile=fileName.replace('\\','/')
             destFile=destFile.split('/')
-            print(destFile)
-            print('copying file',fileName,' to ',trainPath+'/'+destFile[1])
-            shutil.copy(fileName,trainPath+destFile[1])
+            destFile=trainPath+'/'+destFile[1]
+            print('copying file',fileName,' to ',destFile)
+            shutil.copy(fileName,destFile)
             train_copied=train_copied+1
-            print('copied file number ',train_copied)
+            print('Train images: ',train_copied)
             if train_copied>=train_limit:
                 print ('Finished train aquisition')
                 th = threading.Thread(target=keyWatchdog)
