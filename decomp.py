@@ -40,7 +40,7 @@ class Decomp:
         fit_pnp()
 '''
 
-    def __init__(self,name,fig_shape,scaling_factor=1,build=True,dicio_file='dicio',train_path=None,debug_dicio=False):
+    def __init__(self,name,fig_shape,scaling_factor=1,build=True,dicio_file=None,train_path=None,debug_dicio=False):
         # camera name 
         self.name=name
     
@@ -141,7 +141,8 @@ class Decomp:
         if self.dicio_file is None:
             self.dicio_file=join('dicio',self.name)+date+'.npz'
     
-    
+        print(date)
+        print(self.name)
         print(self.dicio_file)
 
         # save dicio file with pars
