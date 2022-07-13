@@ -52,7 +52,9 @@ class NewfileHandler(FileSystemEventHandler):
             b_pnp,a_pnp=process.fit_pnp(img)
         if train:
             print('copying files from',camPath,' to ',trainPath)
-            shutil.copy(os.path.join(camPath,fileName),os.path.join(trainPath,fileName))
+            fileName.replace('\\','/')
+            filename.split('/')
+            shutil.copy(os.path.join(camPath,fileName),fileName[1])
             train_copied=train_copied+1
             print('copied file number ',train_copied)
             if train_copied>=train_limit:
