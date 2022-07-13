@@ -31,6 +31,7 @@ class NewfileHandler(FileSystemEventHandler):
     def on_created(self, event): # when file is created
         global train
         global run
+        global train_copied
         file_list=[]
 
         # do something, eg. call your function to process the image
@@ -54,7 +55,7 @@ class NewfileHandler(FileSystemEventHandler):
             destFile=fileName.replace('\\','/')
             destFile=destFile.split('/')
             print(destFile)
-            print('copying file',fileName,' to ',trainPath+destFile[1])
+            print('copying file',fileName,' to ',trainPath+'/'+destFile[1])
             shutil.copy(fileName,trainPath+destFile[1])
             train_copied=train_copied+1
             print('copied file number ',train_copied)
