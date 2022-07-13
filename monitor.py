@@ -22,9 +22,8 @@ dicioPath='dicio/'+camPath
 
 def keyWatchdog():
     global key
-    global threadPause
     print('keyboard thread online')
-    while True:
+    while key==None:
         key=input()
         print('Read '+key)
 
