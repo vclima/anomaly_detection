@@ -53,8 +53,9 @@ class NewfileHandler(FileSystemEventHandler):
         if train:
             destFile=fileName.replace('\\','/')
             destFile=destFile.split('/')
-            print('copying file',fileName,' to ',camPath+fileName[1])
-            shutil.copy(fileName,camPath+fileName[1])
+            print(destFile)
+            print('copying file',fileName,' to ',trainPath+destFile[1])
+            shutil.copy(fileName,trainPath+destFile[1])
             train_copied=train_copied+1
             print('copied file number ',train_copied)
             if train_copied>=train_limit:
