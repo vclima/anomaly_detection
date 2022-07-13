@@ -93,13 +93,13 @@ event_handler = NewfileHandler() # create event handler
 observer.schedule(event_handler, path=camPath)
 #instanciar um objeto da classe Decomp
 
+threadPause=False
 th = threading.Thread(target=keyWatchdog)
 th.start()
 
 observer.start()
 run=False
 train=False
-threadPause=False
 train_copied=0
 key=None
 # sleep until keyboard interrupt, then stop + rejoin the observer
