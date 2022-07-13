@@ -26,6 +26,7 @@ def keyWatchdog():
     print('keyboard thread online')
     if not threadPause:
         key=input()
+        print('Read '+key)
     else:
         _=input()
 
@@ -110,22 +111,22 @@ try:
     while True:      
         if key=='T':
             print('copying files from',camPath,' to ',trainPath)
-            key=None
             for filename in os.listdir(trainPath):
                 os.remove(os.path.join(trainPath,filename))
             train_copied=0
             train=True
             threadPause=True
-        if key=='B':
             key=None
+        if key=='B':
             print('Starting process')
             process=Decomp(camPath,figshape)
             process.build_dicio()
             run=True
-        if key=='S':
             key=None
+        if key=='S':
             print('Stopping process')
             run=False
+            key=None
         sleep(1)
 except KeyboardInterrupt:
     observer.stop()
