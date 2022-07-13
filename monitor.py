@@ -94,6 +94,7 @@ event_handler = NewfileHandler() # create event handler
 observer.schedule(event_handler, path=camPath)
 #instanciar um objeto da classe Decomp
 
+key=None
 th = threading.Thread(target=keyWatchdog)
 th.start()
 
@@ -101,7 +102,6 @@ observer.start()
 run=False
 train=False
 train_copied=0
-key=None
 # sleep until keyboard interrupt, then stop + rejoin the observer
 try:
     print('T - capture train images; B - begin process; S - stop process')
