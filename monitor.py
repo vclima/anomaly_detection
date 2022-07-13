@@ -14,7 +14,7 @@ import cv2
 import numpy as np
 
 camPath='i3t'
-figshape=(640,480)
+figshape=(480,640)
 train_limit=70
 
 
