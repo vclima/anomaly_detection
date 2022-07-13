@@ -114,15 +114,18 @@ try:
             train=True
             th.join()
             key=None
-        if key=='B':
+        if key=='S':
             print('Starting process')
-            process=Decomp(camPath,figshape)
-            process.build_dicio()
+            process=Decomp(camPath,figshape,build=True,train_path=trainPath)
             run=True
             key=None
-        if key=='S':
-            print('Stopping process')
+        if key=='P':
+            print('Pausing process')
             run=False
+            key=None
+        if key=='R':
+            print('Resume process')
+            run=True
             key=None
         sleep(1)
 except KeyboardInterrupt:
