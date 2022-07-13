@@ -25,12 +25,12 @@ def keyWatchdog():
     global threadPause
     print('keyboard thread online')
     while True:
-        if not threadPause:
-            key=input()
-            print('Read '+key)
+        if threadPause:
+            key=None
+            print('Keyboard paused')
         else:
             key=input()
-            key=None
+            print('Read '+key)
 
 
 class NewfileHandler(FileSystemEventHandler):
