@@ -84,7 +84,7 @@ class Decomp:
         #frame=cv2.normalize(frame, None, 1.0,0.0, cv2.NORM_MINMAX,cv2.CV_32F)
         return np.array(frame)
 
-    def build_dicio(self,tol=1e-1,debug=False,debug_path='debug'):
+    def build_dicio(self,tol=1e-5,debug=False,debug_path='debug'):
         # open training images
         files = [join(self.train_path,f) for f in listdir(self.train_path) if isfile(join(self.train_path, f))]
         frames=[]
