@@ -31,9 +31,11 @@ def binOpen(fileName,debug=False):
         image = normalize(image)
 
     else: 
-        content=content[3:][0]
-        image=np.array(content).squeeze()
-        image=np.reshape(image,fig_shape)
+        c2=[[row[c] for row in content] for c in range(len(content[0]))]
+        content=np.array(c2).T
+        content=content[:,0]
+        content=content[3:]
+        image=np.reshape(content,fig_shape)
         image=np.uint16(image)
         image = cv2.cvtColor(image, cv2.COLOR_BayerGR2GRAY)
         image = normalize(image)
