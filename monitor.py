@@ -49,22 +49,24 @@ class NewfileHandler(FileSystemEventHandler):
         # do something, eg. call your function to process the image
         fileName=str(event.src_path).split('.')
         fileName=fileName[0]+'.bin'
-        print("Got created event for file "+fileName)
+        print("Got created event for file "+fileName) #identifica o arquivo que gerou a interrupção
         fileOpen=False
 
-        while not fileOpen:
+        while not fileOpen: #espera o arquivo ser completamente copiado no diretorio monitorado
             try:
                 f=open(fileName,'rb')
                 fileOpen=True
                 f.close()
             except:
                 pass
-        if run:
-            t=time()
-            img,_= binOpen(fileName)
+
+
+        if run: #se o processamento está ativado
+            t=time() 
+            img,_= binOpen(fileName) #decodifica o arquivo .bin
             t2=time()
             print('Arquivo aberto ',str(t2-t))
-            b_proj,a_proj=process.fit_proj(img)
+            b_proj,a_proj=process.fit_proj(img) #decompoe pelo metodo de projecao
             print('Projection: '+str(process.fit_timer))
 
             limiar=0 #seta o limiar para considerar a imagem anomala
@@ -74,37 +76,37 @@ class NewfileHandler(FileSystemEventHandler):
                 shutil.copy(fileName,'anom/'+fileName) #salva a imagem bin anomala na pasta anom
 
 
-            #b_pnp,a_pnp=process.fit_pnp(img,proxl1,lamb2=0.1)
+            #b_pnp,a_pnp=process.fit_pnp(img,proxl1,lamb2=0.1) #decompoe stoc
             #print('Stoc: '+str(process.fit_timer))
-            #b_ffd,a_ffd=process.fit_pnp(img,ffd,max_iter=10)
+            #b_ffd,a_ffd=process.fit_pnp(img,ffd,max_iter=10) #decompoe ffd
             #print('Stoc: '+str(process.fit_timer))
-            vis1 = np.concatenate((process.rescale(img),b_proj,a_proj), axis=1)
+            vis1 = np.concatenate((process.rescale(img),b_proj,a_proj), axis=1) #concatena as imagens originais, bg e anomalia
             #vis2= np.concatenate((process.rescale(img),b_pnp,a_pnp), axis=1)
             #vis3= np.concatenate((process.rescale(img),b_ffd,a_ffd), axis=1)
             #vis = np.concatenate((vis1,vis2), axis=0)
-            vis= np.around(normalize(vis1,0,255))
+            vis= np.around(normalize(vis1,0,255)) #normaliza para exibicao
 
             im = Image.fromarray(vis)
             im=im.convert("L")
-            im.save('out/'+fileName+'.jpeg')
+            im.save('out/'+fileName+'.jpeg') #salva a imagem como jpg para visualizacao
 
 
-        if train:
+        if train: #se o modo de construir dataset de treino esta ativo
             destFile=fileName.replace('\\','/')
             destFile=destFile.split('/')
             destFile=trainPath+'/'+destFile[1]
-            print('copying file',fileName,' to ',destFile)
+            print('copying file',fileName,' to ',destFile) #salva os arquivos bin na pasta train
             shutil.copy(fileName,destFile)
             train_copied=train_copied+1
             print('Train images: ',train_copied)
-            if train_copied>=train_limit:
+            if train_copied>=train_limit: #se atingiu o tamanho do dataset
                 print ('Finished train acquisition')
-                th = threading.Thread(target=keyWatchdog)
+                th = threading.Thread(target=keyWatchdog) #reinicia monitor do teclado
                 th.start()
-                train=False
+                train=False #sai do modo de treino
 
 
-        try:
+        try: #cuida para manter a pasta de imagens com 30 arquivos no maximo
             file_list=sorted(Path(camPath).iterdir(),key=getctime)
             while len(file_list)>=30:
                 unlink(file_list[0])
