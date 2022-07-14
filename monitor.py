@@ -1,5 +1,5 @@
 
-from time import sleep
+from time import sleep,time
 from pathlib import Path
 from os.path import getctime
 from os import unlink
@@ -14,10 +14,16 @@ import cv2
 import numpy as np
 from PIL import Image
 
-camPath='pan'
-figshape=(1536,2048)
-train_limit=70
+#camPath='pan'
+#figshape=(1536,2048)
+#scale=0.5
 
+camPath='i3t'
+figshape=(480,640)
+scale=1
+
+train_limit=70
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 
 trainPath='train/'+camPath
@@ -54,18 +60,21 @@ class NewfileHandler(FileSystemEventHandler):
             except:
                 pass
         if run:
-            img,_=binOpen(fileName)
+            t=time()
+            img,_= binOpen(fileName)
+            t2=time()
+            print('Arquivo aberto ',str(t2-t))
             b_proj,a_proj=process.fit_proj(img)
             print('Projection: '+str(process.fit_timer))
-            b_pnp,a_pnp=process.fit_pnp(img,proxl1,lamb2=0.1)
-            print('Stoc: '+str(process.fit_timer))
-            b_ffd,a_ffd=process.fit_pnp(img,ffd,max_iter=10)
-            print('Stoc: '+str(process.fit_timer))
+            #b_pnp,a_pnp=process.fit_pnp(img,proxl1,lamb2=0.1)
+            #print('Stoc: '+str(process.fit_timer))
+            #b_ffd,a_ffd=process.fit_pnp(img,ffd,max_iter=10)
+            #print('Stoc: '+str(process.fit_timer))
             vis1 = np.concatenate((process.rescale(img),b_proj,a_proj), axis=1)
-            vis2= np.concatenate((process.rescale(img),b_pnp,a_pnp), axis=1)
-            vis3= np.concatenate((process.rescale(img),b_ffd,a_ffd), axis=1)
-            vis = np.concatenate((vis1,vis2,vis3), axis=0)
-            vis= np.around(normalize(vis,0,255))
+            #vis2= np.concatenate((process.rescale(img),b_pnp,a_pnp), axis=1)
+            #vis3= np.concatenate((process.rescale(img),b_ffd,a_ffd), axis=1)
+            #vis = np.concatenate((vis1,vis2), axis=0)
+            vis= np.around(normalize(vis1,0,255))
 
             im = Image.fromarray(vis)
             im=im.convert("L")
@@ -136,7 +145,7 @@ try:
             elif key=='S' or key=='s':
                 th.join()
                 print('Starting process')
-                process=Decomp(camPath,figshape,build=True,train_path=trainPath,scaling_factor=0.5)
+                process=Decomp(camPath,figshape,build=True,train_path=trainPath,scaling_factor=scale)
                 run=True
                 key=None
                 th = threading.Thread(target=keyWatchdog)
@@ -158,7 +167,7 @@ try:
             elif key=='L' or key=='l':
                 th.join()
                 print('Load dic')
-                process=Decomp(camPath,figshape,build=False,dicio_file=dicioPath,scaling_factor=0.5)
+                process=Decomp(camPath,figshape,build=False,dicio_file=dicioPath,scaling_factor=scale)
                 run=True
                 key=None
                 th = threading.Thread(target=keyWatchdog)
