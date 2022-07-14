@@ -2,31 +2,40 @@ from struct import iter_unpack,unpack
 import numpy as np
 import cv2
 import denoiser
+import os
+from time import time
+
+from PIL import Image
 
 
-def binOpen(fileName):
+def binOpen(fileName,debug=False):
+    
     filePointer=open(fileName,'rb')
-    
-    contentBin=filePointer.read(2)
-    content=unpack('H',contentBin)
-    img_type=content[0]
-    
-    contentBin=filePointer.read(4)
+    contentBin=filePointer.read()
     content=list(iter_unpack('H',contentBin))
-    fig_shape=(content[1][0],content[0][0])
+    img_type=content[0][0]
+    if debug:
+        print(img_type)
+    fig_shape=(content[2][0],content[1][0])
+    
+    if debug:
+        print(fig_shape)
 
     if img_type:
-        contentBin=filePointer.read(2*fig_shape[0]*fig_shape[1])
-        content=list(iter_unpack('H',contentBin))
-        image=np.array(content).squeeze()
-        image=np.reshape(image,fig_shape)
+        c2=[[row[c] for row in content] for c in range(len(content[0]))]
+        content=np.array(c2).T
+        content=content[:,0]
+        content=content[3:]
+        image=np.reshape(content,fig_shape)
         image=np.uint16(image)
         image = normalize(image)
+
     else: 
-        contentBin=filePointer.read(2*fig_shape[0]*fig_shape[1])
-        content=list(iter_unpack('H',contentBin))
-        image=np.array(content).squeeze()
-        image=np.reshape(image,fig_shape)
+        c2=[[row[c] for row in content] for c in range(len(content[0]))]
+        content=np.array(c2).T
+        content=content[:,0]
+        content=content[3:]
+        image=np.reshape(content,fig_shape)
         image=np.uint16(image)
         image = cv2.cvtColor(image, cv2.COLOR_BayerGR2GRAY)
         image = normalize(image)
@@ -34,8 +43,8 @@ def binOpen(fileName):
     filePointer.close()
     return image,fig_shape
 
-def normalize(img):
-    out=cv2.normalize(img,None,1,0,cv2.NORM_MINMAX,cv2.CV_32F)
+def normalize(img,mi=0,ma=1):
+    out=cv2.normalize(img,None,ma,mi,cv2.NORM_MINMAX,cv2.CV_32F)
     return out
 
 def pcp(M, lam=None, mu=None, factor=1, tol=1e-3,maxit=1000,debug=True):
@@ -91,3 +100,17 @@ def pcp(M, lam=None, mu=None, factor=1, tol=1e-3,maxit=1000,debug=True):
         if debug is True:
             print(k,':',RelChg)
     return L, S, k, rank
+
+
+def convertBin(infolder,outfolder):
+
+    for k,filename in enumerate(os.listdir(infolder)):
+        img=binOpen(filename)
+        
+        vis= np.around(normalize(img,0,255))
+
+        im = Image.fromarray(vis)
+        im=im.convert("L")
+        im.save(outfolder+filename+'.jpeg')
+       
+    return
