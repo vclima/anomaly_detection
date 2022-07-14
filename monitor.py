@@ -66,6 +66,14 @@ class NewfileHandler(FileSystemEventHandler):
             print('Arquivo aberto ',str(t2-t))
             b_proj,a_proj=process.fit_proj(img)
             print('Projection: '+str(process.fit_timer))
+
+            limiar=0 #seta o limiar para considerar a imagem anomala
+
+            en=np.linalg.norm(a_proj) #calcula a energia da anomalia
+            if en>limiar:
+                shutil.copy(fileName,'anom/'+fileName) #salva a imagem bin anomala na pasta anom
+
+
             #b_pnp,a_pnp=process.fit_pnp(img,proxl1,lamb2=0.1)
             #print('Stoc: '+str(process.fit_timer))
             #b_ffd,a_ffd=process.fit_pnp(img,ffd,max_iter=10)
