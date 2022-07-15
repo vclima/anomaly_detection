@@ -21,6 +21,7 @@ from PIL import Image
 camPath='i3t'
 figshape=(480,640)
 scale=1
+limiar = 55
 
 train_limit=70
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
@@ -29,6 +30,22 @@ os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 trainPath='train/'+camPath
 debugPath='debug/'+camPath
 dicioPath='dicio/'+camPath
+
+'''
+def setLimiar():
+    energy=[]
+    for k,filename in enumerate(os.listdir(trainPath)):
+        img,_= binOpen(trainPath+'/'+filename)
+        b_proj,a_proj=process.fit_proj(img)
+        #a_proj=normalize(a_proj-np.mean(a_proj))
+        en=np.linalg.norm(a_proj)
+        energy.append(en)
+        print('Energy: '+str(en))
+    lim=sum(energy)/len(energy)
+    lim=1.1*lim
+    print('Limiar: '+str(lim))
+    return lim
+ '''
 
 def keyWatchdog():
     global key
@@ -44,12 +61,12 @@ class NewfileHandler(FileSystemEventHandler):
         global run
         global train_copied
         global th
+        global limiar
         file_list=[]
 
         # do something, eg. call your function to process the image
         fileName=str(event.src_path).split('.')
         fileName=fileName[0]+'.bin'
-        print("Got created event for file "+fileName) #identifica o arquivo que gerou a interrupção
         fileOpen=False
 
         while not fileOpen: #espera o arquivo ser completamente copiado no diretorio monitorado
@@ -62,21 +79,24 @@ class NewfileHandler(FileSystemEventHandler):
 
 
         if run: #se o processamento está ativado
+            print("Got created event for file "+fileName) #identifica o arquivo que gerou a interrupção
             t=time() 
             img,_= binOpen(fileName) #decodifica o arquivo .bin
             t2=time()
             print('Arquivo aberto ',str(t2-t))
             b_proj,a_proj=process.fit_proj(img) #decompoe pelo metodo de projecao
+            #a_proj=normalize(a_proj-np.mean(a_proj))
             print('Projection: '+str(process.fit_timer))
 
-            limiar=0 #seta o limiar para considerar a imagem anomala
-
+            #seta o limiar para considerar a imagem anomala
+            
             en=np.linalg.norm(a_proj) #calcula a energia da anomalia
+            print('Energia '+str(en))
             if en>limiar:
                 shutil.copy(fileName,'anom/'+fileName) #salva a imagem bin anomala na pasta anom
 
 
-            #b_pnp,a_pnp=process.fit_pnp(img,proxl1,lamb2=0.1) #decompoe stoc
+            #b_pnp,a_pnp=process.fit_pnp(img,proxl1,lamb2=0.2) #decompoe stoc
             #print('Stoc: '+str(process.fit_timer))
             #b_ffd,a_ffd=process.fit_pnp(img,ffd,max_iter=10) #decompoe ffd
             #print('Stoc: '+str(process.fit_timer))
@@ -85,13 +105,16 @@ class NewfileHandler(FileSystemEventHandler):
             #vis3= np.concatenate((process.rescale(img),b_ffd,a_ffd), axis=1)
             #vis = np.concatenate((vis1,vis2), axis=0)
             vis= np.around(normalize(vis1,0,255)) #normaliza para exibicao
-
-            im = Image.fromarray(vis)
-            im=im.convert("L")
-            im.save('out/'+fileName+'.jpeg') #salva a imagem como jpg para visualizacao
+            
+            if en>limiar:
+                shutil.copy(fileName,'anom/'+fileName) #salva a imagem bin anomala na pasta anom
+                im = Image.fromarray(vis)
+                im=im.convert("L")
+                im.save('out/'+fileName+'.jpeg') #salva a imagem como jpg para visualizacao
 
 
         if train: #se o modo de construir dataset de treino esta ativo
+            print("Got created event for file "+fileName) #identifica o arquivo que gerou a interrupção
             destFile=fileName.replace('\\','/')
             destFile=destFile.split('/')
             destFile=trainPath+'/'+destFile[1]
@@ -132,6 +155,7 @@ observer.schedule(event_handler, path=camPath)
 #instanciar um objeto da classe Decomp
 
 key=None
+process=None
 th = threading.Thread(target=keyWatchdog)
 th.start()
 
@@ -139,9 +163,10 @@ observer.start()
 run=False
 train=False
 train_copied=0
+
 # sleep until keyboard interrupt, then stop + rejoin the observer
 try:
-    print('T - capture train images; S - Train dictionary and start;L - Load dictionary and start; P - Pause process; R - Resume process;')
+    print('T - capture train images; S - Train dictionary and start;L - Load dictionary and start; P - Pause process; R - Resume process; Li - Set limiar')
     while True:
         if key is not None:      
             if key=='T' or key=='t':
@@ -150,6 +175,7 @@ try:
                     os.remove(os.path.join(trainPath,filename))
                 train_copied=0
                 train=True
+                run=False
                 th.join()
                 key=None
             elif key=='S' or key=='s':
@@ -162,15 +188,21 @@ try:
                 th.start()
             elif key=='P' or key=='p':
                 th.join()
-                print('Pausing process')
-                run=False
+                if process is not None:
+                    print('Pausing process')
+                    run=False
+                else:
+                    print('Process not initiated')
                 key=None
                 th = threading.Thread(target=keyWatchdog)
                 th.start()
             elif key=='R' or key=='r':
                 th.join()
-                print('Resume process')
-                run=True
+                if process is not None:
+                    print('Resuming process')
+                    run=True
+                else:
+                    print('Process not initiated')
                 key=None
                 th = threading.Thread(target=keyWatchdog)
                 th.start()
@@ -178,7 +210,26 @@ try:
                 th.join()
                 print('Load dic')
                 process=Decomp(camPath,figshape,build=False,dicio_file=dicioPath,scaling_factor=scale)
+                #limiar=setLimiar()
                 run=True
+                key=None
+                th = threading.Thread(target=keyWatchdog)
+                th.start()
+            elif key=='Li' or key=='li':
+                th.join()
+                if process is not None:
+                    run=False
+                    observer.stop()
+                    observer.join()
+                    limiar=input('Limiar: ')
+                    limiar=float(limiar)
+                    observer = Observer()
+                    event_handler = NewfileHandler() # create event handler
+                    observer.schedule(event_handler, path=camPath)
+                    observer.start()
+                    run=True
+                else:
+                    print('Cannot set limiar without process started')
                 key=None
                 th = threading.Thread(target=keyWatchdog)
                 th.start()
@@ -189,7 +240,11 @@ try:
                 key=None
                 th = threading.Thread(target=keyWatchdog)
                 th.start()
-        
+        if not observer.is_alive():
+            observer = Observer()
+            event_handler = NewfileHandler() # create event handler
+            observer.schedule(event_handler, path=camPath)
+            observer.start()
         sleep(1)
 except KeyboardInterrupt:
     observer.stop()

@@ -1,5 +1,6 @@
 from struct import iter_unpack,unpack
 import numpy as np
+from scipy.sparse.linalg import svds
 import cv2
 import denoiser
 import os
@@ -73,8 +74,16 @@ def pcp(M, lam=None, mu=None, factor=1, tol=1e-3,maxit=1000,debug=True):
         X = Lambda / mu + M
         # L - subproblem
         Y = X - S;
-        dL = L;       
+        dL = L;  
+
+        # EXPENSIVE SVD
         U, sigmas, V = np.linalg.svd(Y, full_matrices=False);
+
+        # LESS EXPENSIVE SVD
+        #pre_rank=max(min(np.linalg.matrix_rank(Y),min(Y.shape)-1),1)
+        #U,sigmas,V=svds(Y,k=pre_rank)
+        
+
         rank = (sigmas > 1/mu).sum()
         Sigma = np.diag(sigmas[0:rank] - 1/mu)
         L = np.dot(np.dot(U[:,0:rank], Sigma), V[0:rank,:])

@@ -1,0 +1,6 @@
+ffdnet
+numpy
+opencv-python
+Pillow
+scipy
+watchdog
